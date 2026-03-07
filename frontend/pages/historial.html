@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OdontoSoft — Historial Clínico</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="../css/app.css" rel="stylesheet"/>
+  <style>
+    .historial-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      margin-bottom: 14px; overflow: hidden;
+    }
+    .historial-header {
+      background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+      padding: 14px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+    }
+    .historial-header:hover { background: linear-gradient(135deg, #dcedc8, #e8f5e9); }
+    .historial-fecha { font-weight: 800; color: #2e7d32; font-size: 0.92rem; }
+    .historial-motivo { color: #546e7a; font-size: 0.84rem; margin-top: 2px; }
+    .historial-body { padding: 16px 20px; display: none; }
+    .historial-body.open { display: block; }
+    .detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 500px) { .detalle-grid { grid-template-columns: 1fr; } }
+    .detalle-item label { font-size: 0.68rem; font-weight: 800; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 3px; }
+    .detalle-item span  { font-size: 0.88rem; color: #37474f; }
+    .tag-pieza {
+      display: inline-block; background: #e3f2fd; color: #1565c0;
+      border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700;
+      margin: 2px;
+    }
+    .tag-medicamento {
+      display: inline-block; background: #f3e5f5; color: #6a1b9a;
+      border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700;
+      margin: 2px;
+    }
+    .patient-banner {
+      background: linear-gradient(135deg, #00695c, #00897b);
+      border-radius: 14px; padding: 18px 24px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .patient-banner i { font-size: 36px; color: rgba(255,255,255,0.8); }
+    .patient-banner h2 { color: #fff; font-size: 1.2rem; font-weight: 800; margin: 0; }
+    .patient-banner p  { color: rgba(255,255,255,0.75); font-size: 0.82rem; margin: 2px 0 0; }
+    .search-pac-wrapper { display: flex; gap: 10px; align-items: flex-end; }
+    .search-pac-wrapper select {
+      flex: 1; height: 44px; border: 2px solid #e0e0e0; border-radius: 10px;
+      padding: 0 14px; font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+      color: #263238; outline: none; background: #fafafa; appearance: none;
+    }
+    .search-pac-wrapper select:focus { border-color: #00897b; }
+  </style>
+</head>
+<body>
+
+<ul id="sidenav-main" class="sidenav sidenav-fixed">
+  <li>
+    <div class="user-view">
+      <div class="user-avatar"><i class="material-icons">account_circle</i></div>
+      <span class="user-name" id="nav-nombre">Cargando...</span>
+      <span class="user-role" id="nav-rol"></span>
+    </div>
+  </li>
+  <li><div class="nav-label">Módulos</div></li>
+  <li><a href="pacientes.html"><i class="material-icons">people</i>Pacientes</a></li>
+  <li><a href="citas.html"><i class="material-icons">event_note</i>Citas</a></li>
+  <li><a href="dentistas.html"><i class="material-icons">medical_services</i>Dentistas</a></li>
+  <li class="active"><a href="historial.html"><i class="material-icons">folder_shared</i>Historial Clínico</a></li>
+  <li><div class="divider"></div></li>
+  <li><a href="#" onclick="cerrarSesion()"><i class="material-icons">logout</i>Cerrar sesión</a></li>
+</ul>
+
+<div class="navbar-fixed">
+  <nav class="top-nav">
+    <div class="nav-wrapper" style="padding:0 20px">
+      <a href="#" data-target="sidenav-main" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <span class="brand-logo center">
+        <i class="material-icons" style="vertical-align:middle;margin-right:6px;font-size:1.2rem">local_hospital</i>
+        OdontoSoft
+      </span>
+    </div>
+  </nav>
+</div>
+
+<div class="main-content">
+
+  <div class="page-title">
+    <i class="material-icons">folder_shared</i>
+    Historial Clínico
+  </div>
+
+  <!-- Selector de paciente -->
+  <div class="os-card">
+    <div class="card-pad">
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
+          <label style="display:block;font-size:0.72rem;font-weight:800;color:#546e7a;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">
+            Seleccionar paciente
+          </label>
+          <select id="select-paciente" onchange="cargarHistorial(this.value)"
+            style="display:block;width:100%;height:48px;border:2px solid #00897b;border-radius:10px;padding:0 14px;font-family:'Nunito',sans-serif;font-size:0.92rem;color:#263238;background:#fff;outline:none;cursor:pointer;">
+            <option value="">— Selecciona un paciente —</option>
+          </select>
+        </div>
+        <button class="btn-save" onclick="abrirModalNueva()" id="btn-nueva-entrada"
+          style="display:none;white-space:nowrap;height:48px">
+          <i class="material-icons" style="font-size:16px">add</i>
+          Nueva entrada clínica
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner del paciente -->
+  <div id="patient-banner" style="display:none" class="patient-banner">
+    <i class="material-icons">account_circle</i>
+    <div>
+      <h2 id="banner-nombre">—</h2>
+      <p id="banner-info">—</p>
+    </div>
+  </div>
+
+  <!-- Lista de entradas -->
+  <div id="contenedor-historial">
+    <div class="empty-state">
+      <i class="material-icons">folder_open</i>
+      <p>Selecciona un paciente para ver su historial clínico.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="fab-fixed" id="fab-nuevo" style="display:none">
+  <button class="fab-btn" onclick="abrirModalNueva()" title="Nueva entrada">
+    <i class="material-icons">add</i>
+  </button>
+</div>
+
+<!-- Modal nueva/editar entrada -->
+<div id="modal-entrada" class="modal modal-fixed-footer">
+  <div class="modal-content">
+    <div class="modal-title">
+      <i class="material-icons">medical_services</i>
+      <span id="modal-titulo-entrada">Nueva Entrada Clínica</span>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Fecha de consulta <span style="color:#e53935">*</span></label>
+        <input id="e-fecha" type="date"/>
+      </div>
+      <div class="form-field">
+        <label>Dentista</label>
+        <input id="e-dentista" type="text" placeholder="Ej: Dr. García"/>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Motivo de consulta <span style="color:#e53935">*</span></label>
+      <input id="e-motivo" type="text" placeholder="Ej: Dolor en muela del juicio"/>
+    </div>
+
+    <div class="form-field">
+      <label>Diagnóstico</label>
+      <textarea id="e-diagnostico" placeholder="Diagnóstico del profesional..."></textarea>
+    </div>
+
+    <div class="form-field">
+      <label>Tratamiento realizado</label>
+      <textarea id="e-tratamiento" placeholder="Descripción del procedimiento..."></textarea>
+    </div>
+
+    <div class="form-field">
+      <label>Piezas dentales (separadas por coma, ej: 18, 36, 47)</label>
+      <input id="e-piezas" type="text" placeholder="18, 36, 47"/>
+    </div>
+
+    <div class="form-field">
+      <label>Medicamentos recetados (nombre - dosis, separados por |)</label>
+      <input id="e-medicamentos" type="text" placeholder="Ibuprofeno 400mg 3x1 día | Amoxicilina 500mg 2x1 día"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Próxima cita</label>
+        <input id="e-proxima" type="date"/>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Observaciones</label>
+      <textarea id="e-observaciones" placeholder="Notas adicionales..."></textarea>
+    </div>
+
+    <div class="modal-error" id="entrada-error">
+      <i class="material-icons">error_outline</i>
+      <span id="entrada-error-text"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">Cancelar</button>
+    <button class="btn-save" onclick="guardarEntrada()">
+      <i class="material-icons" style="font-size:18px">save</i> Guardar
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="../js/config.js"></script>
+<script>
+  let pacienteActualId   = null;
+  let entradaEditandoId  = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!verificarAuth()) return;
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    M.Modal.init(document.querySelectorAll('.modal'), { dismissible: true });
+    const u = getUsuario();
+    document.getElementById('nav-nombre').textContent = u.nombre || 'Usuario';
+    document.getElementById('nav-rol').textContent    = u.rol ? u.rol.charAt(0).toUpperCase() + u.rol.slice(1) : '';
+
+    await cargarPacientes();
+
+    // Si viene con ?paciente=ID por link directo desde la tabla
+    const params = new URLSearchParams(window.location.search);
+    const pid    = params.get('paciente');
+    if (pid) {
+      document.getElementById('select-paciente').value = pid;
+      cargarHistorial(pid);
+    }
+  });
+
+  async function cargarPacientes() {
+    const data   = await fetchAPI('/pacientes?limit=500');
+    const select = document.getElementById('select-paciente');
+    (data.data || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value       = p._id;
+      opt.textContent = `${p.nombre} ${p.apellido} — ${p.cedula}`;
+      opt.dataset.nombre = `${p.nombre} ${p.apellido}`;
+      opt.dataset.cedula = p.cedula;
+      opt.dataset.fn     = p.fechaNacimiento ? formatFecha(p.fechaNacimiento) : '—';
+      select.appendChild(opt);
+    });
+  }
+
+  async function cargarHistorial(pacienteId) {
+    if (!pacienteId) {
+      document.getElementById('contenedor-historial').innerHTML = `
+        <div class="empty-state"><i class="material-icons">folder_open</i><p>Selecciona un paciente para ver su historial.</p></div>`;
+      document.getElementById('patient-banner').style.display = 'none';
+      document.getElementById('btn-nueva-entrada').style.display = 'none';
+      document.getElementById('fab-nuevo').style.display = 'none';
+      return;
+    }
+    pacienteActualId = pacienteId;
+
+    // Mostrar banner
+    const opt = document.querySelector(`#select-paciente option[value="${pacienteId}"]`);
+    if (opt) {
+      document.getElementById('banner-nombre').textContent = opt.dataset.nombre;
+      document.getElementById('banner-info').textContent   = `Cédula: ${opt.dataset.cedula} · Fecha nac.: ${opt.dataset.fn}`;
+      document.getElementById('patient-banner').style.display = 'flex';
+    }
+    document.getElementById('btn-nueva-entrada').style.display = 'flex';
+    document.getElementById('fab-nuevo').style.display = 'block';
+
+    document.getElementById('contenedor-historial').innerHTML = `
+      <div class="loading-state">
+        <div class="preloader-wrapper active">
+          <div class="spinner-layer spinner-teal-only">
+            <div class="circle-clipper left"><div class="circle"></div></div>
+            <div class="gap-patch"><div class="circle"></div></div>
+            <div class="circle-clipper right"><div class="circle"></div></div>
+          </div>
+        </div><p>Cargando historial...</p>
+      </div>`;
+
+    const data = await fetchAPI(`/historial/paciente/${pacienteId}`);
+    renderizarHistorial(data.data || []);
+  }
+
+  function renderizarHistorial(entradas) {
+    const c = document.getElementById('contenedor-historial');
+    if (!entradas.length) {
+      c.innerHTML = `
+        <div class="empty-state">
+          <i class="material-icons">medical_services</i>
+          <p>No hay entradas clínicas para este paciente.<br>
+          <span style="font-size:0.85rem;color:#cfd8dc">Usa <b>Nueva entrada</b> para registrar la primera consulta.</span></p>
+        </div>`;
+      return;
+    }
+    c.innerHTML = entradas.map(e => `
+      <div class="historial-card">
+        <div class="historial-header" onclick="toggleEntrada('${e._id}')">
+          <div>
+            <div class="historial-fecha">📅 ${formatFecha(e.fecha)} ${e.dentista ? '· ' + e.dentista : ''}</div>
+            <div class="historial-motivo">${e.motivoConsulta}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn-icon btn-edit" onclick="event.stopPropagation();editarEntrada('${e._id}')" title="Editar">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="btn-icon btn-delete" onclick="event.stopPropagation();eliminarEntrada('${e._id}')" title="Archivar">
+              <i class="material-icons">archive</i>
+            </button>
+            <i class="material-icons" id="arrow-${e._id}" style="color:#78909c">expand_more</i>
+          </div>
+        </div>
+        <div class="historial-body" id="body-${e._id}">
+          <div class="detalle-grid">
+            <div class="detalle-item">
+              <label>Diagnóstico</label>
+              <span>${e.diagnostico || '—'}</span>
+            </div>
+            <div class="detalle-item">
+              <label>Tratamiento realizado</label>
+              <span>${e.tratamientoRealizado || '—'}</span>
+            </div>
+            ${e.piezasDentales && e.piezasDentales.length ? `
+            <div class="detalle-item" style="grid-column:1/-1">
+              <label>Piezas dentales</label>
+              <span>${e.piezasDentales.map(p => `<span class="tag-pieza">${p.pieza}${p.condicion ? ' — ' + p.condicion : ''}</span>`).join('')}</span>
+            </div>` : ''}
+            ${e.medicamentos && e.medicamentos.length ? `
+            <div class="detalle-item" style="grid-column:1/-1">
+              <label>Medicamentos</label>
+              <span>${e.medicamentos.map(m => `<span class="tag-medicamento">${m.nombre}${m.dosis ? ' ' + m.dosis : ''}${m.duracion ? ' · ' + m.duracion : ''}</span>`).join('')}</span>
+            </div>` : ''}
+            ${e.proximaCita ? `
+            <div class="detalle-item">
+              <label>Próxima cita</label>
+              <span>${formatFecha(e.proximaCita)}</span>
+            </div>` : ''}
+            ${e.observaciones ? `
+            <div class="detalle-item" style="grid-column:1/-1">
+              <label>Observaciones</label>
+              <span>${e.observaciones}</span>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function toggleEntrada(id) {
+    const body  = document.getElementById(`body-${id}`);
+    const arrow = document.getElementById(`arrow-${id}`);
+    body.classList.toggle('open');
+    arrow.textContent = body.classList.contains('open') ? 'expand_less' : 'expand_more';
+  }
+
+  function abrirModalNueva() {
+    if (!pacienteActualId) { toast('⚠️ Primero selecciona un paciente', 'orange darken-2'); return; }
+    entradaEditandoId = null;
+    document.getElementById('modal-titulo-entrada').textContent = 'Nueva Entrada Clínica';
+    ['e-fecha','e-dentista','e-motivo','e-diagnostico','e-tratamiento','e-piezas','e-medicamentos','e-proxima','e-observaciones']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('e-fecha').value = new Date().toISOString().substring(0,10);
+    ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-entrada')).open();
+    setTimeout(() => document.getElementById('e-motivo').focus(), 300);
+  }
+
+  async function editarEntrada(id) {
+    const data = await fetchAPI(`/historial/${id}`);
+    if (!data.success) { toast('❌ No se pudo cargar la entrada', 'red'); return; }
+    const e = data.data;
+    entradaEditandoId = id;
+    document.getElementById('modal-titulo-entrada').textContent = 'Editar Entrada Clínica';
+    document.getElementById('e-fecha').value        = e.fecha ? e.fecha.substring(0,10) : '';
+    document.getElementById('e-dentista').value     = e.dentista || '';
+    document.getElementById('e-motivo').value       = e.motivoConsulta || '';
+    document.getElementById('e-diagnostico').value  = e.diagnostico || '';
+    document.getElementById('e-tratamiento').value  = e.tratamientoRealizado || '';
+    document.getElementById('e-piezas').value       = (e.piezasDentales || []).map(p => p.pieza).join(', ');
+    document.getElementById('e-medicamentos').value = (e.medicamentos || []).map(m => `${m.nombre} ${m.dosis || ''} ${m.duracion || ''}`.trim()).join(' | ');
+    document.getElementById('e-proxima').value      = e.proximaCita ? e.proximaCita.substring(0,10) : '';
+    document.getElementById('e-observaciones').value= e.observaciones || '';
+    ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-entrada')).open();
+  }
+
+  async function guardarEntrada() {
+    const piezasRaw = document.getElementById('e-piezas').value.trim();
+    const piezas    = piezasRaw
+      ? piezasRaw.split(',').map(s => s.trim()).filter(Boolean).map(n => ({ pieza: Number(n) }))
+      : [];
+
+    const medRaw = document.getElementById('e-medicamentos').value.trim();
+    const medicamentos = medRaw
+      ? medRaw.split('|').map(s => {
+          const parts = s.trim().split(' ');
+          return { nombre: parts[0] || '', dosis: parts.slice(1).join(' ') };
+        }).filter(m => m.nombre)
+      : [];
+
+    const body = {
+      paciente:            pacienteActualId,
+      fecha:               document.getElementById('e-fecha').value,
+      dentista:            document.getElementById('e-dentista').value.trim(),
+      motivoConsulta:      document.getElementById('e-motivo').value.trim(),
+      diagnostico:         document.getElementById('e-diagnostico').value.trim(),
+      tratamientoRealizado:document.getElementById('e-tratamiento').value.trim(),
+      piezasDentales:      piezas,
+      medicamentos,
+      proximaCita:         document.getElementById('e-proxima').value || undefined,
+      observaciones:       document.getElementById('e-observaciones').value.trim(),
+    };
+
+    if (!body.motivoConsulta || !body.fecha) {
+      mostrarError('Fecha y motivo de consulta son obligatorios.'); return;
+    }
+
+    const url    = entradaEditandoId ? `/historial/${entradaEditandoId}` : '/historial';
+    const method = entradaEditandoId ? 'PUT' : 'POST';
+    const data   = await fetchAPI(url, { method, body: JSON.stringify(body) });
+
+    if (data.success) {
+      toast(`✅ Entrada ${entradaEditandoId ? 'actualizada' : 'registrada'} correctamente`);
+      M.Modal.getInstance(document.getElementById('modal-entrada')).close();
+      cargarHistorial(pacienteActualId);
+    } else {
+      mostrarError(data.mensaje || 'Error al guardar.');
+    }
+  }
+
+  async function eliminarEntrada(id) {
+    if (!confirm('¿Archivar esta entrada del historial? El registro se conservará.')) return;
+    const data = await fetchAPI(`/historial/${id}`, { method: 'DELETE' });
+    if (data.success) { toast('✅ Entrada archivada'); cargarHistorial(pacienteActualId); }
+    else toast('❌ ' + data.mensaje, 'red');
+  }
+
+  function mostrarError(msg) {
+    const box = document.getElementById('entrada-error');
+    document.getElementById('entrada-error-text').textContent = msg;
+    box.style.display = 'flex';
+  }
+  function ocultarError() { document.getElementById('entrada-error').style.display = 'none'; }
+  function toast(msg, color = 'teal darken-1') {
+    M.toast({ html: msg, classes: `${color} rounded`, displayLength: 3000 });
+  }
+</script>
+</body>
+</html>

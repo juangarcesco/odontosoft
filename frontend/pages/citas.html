@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OdontoSoft — Citas</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="../css/app.css" rel="stylesheet"/>
+
+</head>
+<body>
+
+<ul id="sidenav-main" class="sidenav sidenav-fixed">
+  <li>
+    <div class="user-view">
+      <div class="user-avatar"><i class="material-icons">account_circle</i></div>
+      <span class="user-name" id="nav-nombre">Cargando...</span>
+      <span class="user-role" id="nav-rol"></span>
+    </div>
+  </li>
+  <li><div class="nav-label">Módulos</div></li>
+  <li><a href="pacientes.html"><i class="material-icons">people</i>Pacientes</a></li>
+  <li class="active"><a href="citas.html"><i class="material-icons">event_note</i>Citas</a></li>
+  <li><a href="dentistas.html"><i class="material-icons">medical_services</i>Dentistas</a></li>
+  <li><a href="historial.html"><i class="material-icons">folder_shared</i>Historial Clínico</a></li>
+  <li><div class="divider"></div></li>
+  <li><a href="#" onclick="cerrarSesion()"><i class="material-icons">logout</i>Cerrar sesión</a></li>
+</ul>
+
+<div class="navbar-fixed">
+  <nav class="top-nav">
+    <div class="nav-wrapper" style="padding:0 20px">
+      <a href="#" data-target="sidenav-main" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <span class="brand-logo center">
+        <i class="material-icons" style="vertical-align:middle;margin-right:6px;font-size:1.2rem">local_hospital</i>
+        OdontoSoft
+      </span>
+    </div>
+  </nav>
+</div>
+
+<div class="main-content">
+
+  <div class="page-title">
+    <i class="material-icons">event_note</i>
+    Citas
+  </div>
+
+  <div class="row" style="margin-bottom:8px">
+    <div class="col s6 m3">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="material-icons">event</i></div>
+        <div class="stat-info"><span>Programadas</span><strong id="stat-programadas">—</strong></div>
+      </div>
+    </div>
+    <div class="col s6 m3">
+      <div class="stat-card">
+        <div class="stat-icon teal"><i class="material-icons">check_circle</i></div>
+        <div class="stat-info"><span>Completadas</span><strong id="stat-completadas">—</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-card">
+    <div class="card-pad">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:0">
+        <div>
+          <label style="display:block;font-size:0.72rem;font-weight:800;color:#546e7a;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Buscar paciente</label>
+          <input id="filtro-paciente-texto" type="text"
+            placeholder="Nombre o cédula..."
+            oninput="filtrarPacientesSelect(this.value)"
+            style="width:100%;height:44px;border:2px solid #e0e0e0;border-radius:10px;padding:0 14px;font-family:'Nunito',sans-serif;font-size:0.88rem;color:#37474f;outline:none;background:#fafafa;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#00897b'" onblur="this.style.borderColor='#e0e0e0'"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;font-weight:800;color:#546e7a;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Filtrar por fecha</label>
+          <input id="filtro-fecha" type="date" onchange="cargarCitas()"
+            style="width:100%;height:44px;border:2px solid #e0e0e0;border-radius:10px;padding:0 14px;font-family:'Nunito',sans-serif;font-size:0.88rem;color:#37474f;outline:none;background:#fafafa;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#00897b'" onblur="this.style.borderColor='#e0e0e0'"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;font-weight:800;color:#546e7a;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Estado</label>
+          <select id="filtro-estado" onchange="cargarCitas()"
+            style="width:100%;height:44px;border:2px solid #e0e0e0;border-radius:10px;padding:0 14px;font-family:'Nunito',sans-serif;font-size:0.88rem;color:#37474f;outline:none;background:#fafafa;cursor:pointer;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#00897b'" onblur="this.style.borderColor='#e0e0e0'">
+            <option value="">Todos los estados</option>
+            <option value="programada">Programada</option>
+            <option value="completada">Completada</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="no_asistio">No asistió</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end">
+        <button onclick="limpiarFiltros()"
+          style="background:none;border:2px solid #e0e0e0;border-radius:10px;padding:8px 16px;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;color:#78909c;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;"
+          onmouseover="this.style.borderColor='#00897b';this.style.color='#00695c'"
+          onmouseout="this.style.borderColor='#e0e0e0';this.style.color='#78909c'">
+          <i class="material-icons" style="font-size:16px">clear</i> Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-card">
+    <div class="card-pad">
+      <div class="card-header-bar" style="margin-bottom:14px">
+        <span>Lista de citas</span>
+        <button class="btn-save" onclick="abrirModalNueva()" style="font-size:0.82rem;padding:8px 16px">
+          <i class="material-icons" style="font-size:16px">event_available</i>
+          Nueva cita
+        </button>
+      </div>
+      <div id="contenedor-citas">
+        <div class="loading-state">
+          <div class="preloader-wrapper active">
+            <div class="spinner-layer spinner-teal-only">
+              <div class="circle-clipper left"><div class="circle"></div></div>
+              <div class="gap-patch"><div class="circle"></div></div>
+              <div class="circle-clipper right"><div class="circle"></div></div>
+            </div>
+          </div>
+          <p>Cargando citas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fab-fixed">
+  <button class="fab-btn" onclick="abrirModalNueva()" title="Nueva cita">
+    <i class="material-icons">event_available</i>
+  </button>
+</div>
+
+<!-- Modal cita -->
+<div id="modal-cita" class="modal modal-fixed-footer">
+  <div class="modal-content">
+    <div class="modal-title">
+      <i class="material-icons">event</i>
+      <span id="modal-titulo-cita">Nueva Cita</span>
+    </div>
+    <div class="form-field">
+      <label>Paciente <span style="color:#e53935">*</span></label>
+      <select id="f-paciente" style="display:block;width:100%;height:48px;border:2px solid #00897b;border-radius:10px;padding:0 14px;font-family:Nunito,sans-serif;font-size:0.92rem;color:#263238;background:#fff;outline:none;margin-bottom:4px;">
+        <option value="">— Selecciona un paciente —</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Fecha y hora <span style="color:#e53935">*</span></label>
+        <input id="f-fecha" type="datetime-local"/>
+      </div>
+      <div class="form-field">
+        <label>Duración (min)</label>
+        <input id="f-duracion" type="number" min="10" max="300" value="30"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Motivo <span style="color:#e53935">*</span></label>
+        <input id="f-motivo" type="text" placeholder="Ej: Limpieza dental"/>
+      </div>
+      <div class="form-field">
+        <label>Dentista</label>
+        <select id="f-dentista" style="display:block;width:100%;height:48px;border:2px solid #e0e0e0;border-radius:10px;padding:0 14px;font-family:Nunito,sans-serif;font-size:0.92rem;color:#263238;background:#fff;outline:none;">
+          <option value="">— Sin asignar —</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Tratamiento</label>
+      <input id="f-tratamiento" type="text" placeholder="Ej: Profilaxis"/>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Estado</label>
+        <select id="f-estado"
+          style="width:100%;height:44px;border:2px solid #e0e0e0;border-radius:10px;padding:0 14px;font-family:Nunito,sans-serif;font-size:0.9rem;outline:none;background:#fafafa;appearance:none">
+          <option value="programada">Programada</option>
+          <option value="completada">Completada</option>
+          <option value="cancelada">Cancelada</option>
+          <option value="no_asistio">No asistió</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Costo ($)</label>
+        <input id="f-costo" type="number" min="0" value="0"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Notas adicionales</label>
+      <textarea id="f-notas" placeholder="Observaciones relevantes..."></textarea>
+    </div>
+    <div class="modal-error" id="cita-error">
+      <i class="material-icons">error_outline</i>
+      <span id="cita-error-text"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">Cancelar</button>
+    <button class="btn-save" onclick="guardarCita()">
+      <i class="material-icons" style="font-size:18px">save</i> Guardar
+    </button>
+  </div>
+</div>
+
+<!-- Modal confirmar archivado -->
+<div id="modal-archivar" class="modal" style="max-width:420px !important">
+  <div class="modal-content">
+    <div class="modal-title danger">
+      <i class="material-icons">archive</i>
+      Archivar cita
+    </div>
+    <p style="color:#546e7a;font-size:0.92rem;line-height:1.7">
+      ¿Deseas archivar esta cita? El registro se conservará en la base de datos.
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">No, cancelar</button>
+    <button class="btn-danger" onclick="confirmarArchivar()">
+      <i class="material-icons" style="font-size:18px">archive</i> Sí, archivar
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="../js/config.js"></script>
+<script>
+  let citaEditandoId  = null;
+  let citaArchivandoId = null;
+  let todosLosPacientes = [];
+  let filtroDebounce;
+
+  const ESTADO_CLASE = { programada:'chip-programada', completada:'chip-completada', cancelada:'chip-cancelada', no_asistio:'chip-no_asistio' };
+  const ESTADO_TEXTO = { programada:'Programada', completada:'Completada', cancelada:'Cancelada', no_asistio:'No asistió' };
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!verificarAuth()) return;
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    M.Modal.init(document.querySelectorAll('.modal'), { dismissible: true });
+    const u = getUsuario();
+    document.getElementById('nav-nombre').textContent = u.nombre || 'Usuario';
+    document.getElementById('nav-rol').textContent    = u.rol ? u.rol.charAt(0).toUpperCase() + u.rol.slice(1) : '';
+    await cargarSelectPacientes();
+    await cargarSelectDentistas();
+    await Promise.all([cargarCitas(), cargarStats()]);
+  });
+
+  async function cargarSelectDentistas() {
+    const data   = await fetchAPI('/dentistas');
+    const select = document.getElementById('f-dentista');
+    const valorActual = select.value;
+    // Keep first option
+    while (select.options.length > 1) select.remove(1);
+    (data.data || []).forEach(d => {
+      const opt = document.createElement('option');
+      opt.value       = d._id;
+      opt.textContent = `Dr(a). ${d.nombre} ${d.apellido}${d.especialidad ? ' — ' + d.especialidad : ''}`;
+      select.appendChild(opt);
+    });
+    if (valorActual) select.value = valorActual;
+  }
+
+  async function cargarStats() {
+    const [prog, comp] = await Promise.all([
+      fetchAPI('/citas?estado=programada'),
+      fetchAPI('/citas?estado=completada'),
+    ]);
+    document.getElementById('stat-programadas').textContent = prog.total || 0;
+    document.getElementById('stat-completadas').textContent = comp.total || 0;
+  }
+
+  async function cargarSelectPacientes() {
+    const data = await fetchAPI('/pacientes?limit=500');
+    todosLosPacientes = data.data || [];
+    poblarSelect(todosLosPacientes);
+  }
+
+  function poblarSelect(pacientes) {
+    const select = document.getElementById('f-paciente');
+    const valorActual = select.value;
+    select.innerHTML = '<option value="">Selecciona un paciente...</option>';
+    pacientes.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value       = p._id;
+      opt.textContent = `${p.nombre} ${p.apellido} — ${p.cedula}`;
+      select.appendChild(opt);
+    });
+    if (valorActual) select.value = valorActual;
+  }
+
+  function filtrarPacientesSelect(texto) {
+    clearTimeout(filtroDebounce);
+    filtroDebounce = setTimeout(() => {
+      if (!texto) { poblarSelect(todosLosPacientes); cargarCitas(); return; }
+      const t = texto.toLowerCase();
+      const filtrados = todosLosPacientes.filter(p =>
+        `${p.nombre} ${p.apellido}`.toLowerCase().includes(t) ||
+        p.cedula.includes(t)
+      );
+      poblarSelect(filtrados);
+      // Filtrar tabla de citas también
+      const pid = filtrados.length === 1 ? filtrados[0]._id : '';
+      cargarCitas(pid);
+    }, 350);
+  }
+
+  async function cargarCitas(pacienteId = '') {
+    const fecha  = document.getElementById('filtro-fecha').value;
+    const estado = document.getElementById('filtro-estado').value;
+    const params = [];
+    if (fecha)      params.push(`fecha=${fecha}`);
+    if (estado)     params.push(`estado=${estado}`);
+    if (pacienteId) params.push(`paciente=${pacienteId}`);
+    const data = await fetchAPI(`/citas${params.length ? '?' + params.join('&') : ''}`);
+    renderizarCitas(data.data || []);
+  }
+
+  function limpiarFiltros() {
+    document.getElementById('filtro-fecha').value          = '';
+    document.getElementById('filtro-estado').value         = '';
+    document.getElementById('filtro-paciente-texto').value = '';
+    poblarSelect(todosLosPacientes);
+    cargarCitas();
+  }
+
+  function renderizarCitas(citas) {
+    const c = document.getElementById('contenedor-citas');
+    if (!citas.length) {
+      c.innerHTML = `<div class="empty-state"><i class="material-icons">event_busy</i><p>No se encontraron citas.</p></div>`;
+      return;
+    }
+    c.innerHTML = `
+      <div class="table-responsive">
+        <table class="os-table">
+          <thead>
+            <tr><th>Paciente</th><th>Fecha y hora</th><th>Motivo</th><th>Dentista</th><th>Estado</th><th>Costo</th><th style="text-align:center">Acciones</th></tr>
+          </thead>
+          <tbody>
+            ${citas.map(cita => {
+              const pac   = cita.paciente ? `${cita.paciente.nombre} ${cita.paciente.apellido}` : '—';
+              const fecha = formatFecha(cita.fecha, true);
+              return `<tr>
+                <td><b>${pac}</b></td>
+                <td>${fecha}</td>
+                <td>${cita.motivo}</td>
+                <td>${(() => { const d = cita.dentista; if (!d) return '<span class="text-muted">—</span>'; if (typeof d === "object") return "Dr(a). " + d.nombre + " " + d.apellido; return d; })()}</td>
+                <td><span class="chip-estado ${ESTADO_CLASE[cita.estado] || ''}">${ESTADO_TEXTO[cita.estado] || cita.estado}</span></td>
+                <td>$${Number(cita.costo).toLocaleString('es-CO')}</td>
+                <td style="text-align:center;white-space:nowrap">
+                  <button class="btn-icon btn-edit" onclick="editarCita('${cita._id}')" title="Editar">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button class="btn-icon btn-delete" onclick="pedirArchivar('${cita._id}')" title="Archivar">
+                    <i class="material-icons">archive</i>
+                  </button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-footer">${citas.length} cita(s)</p>`;
+  }
+
+  function abrirModalNueva() {
+    citaEditandoId = null;
+    document.getElementById('modal-titulo-cita').textContent = 'Nueva Cita';
+    ['f-paciente','f-fecha','f-motivo','f-tratamiento','f-notas'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-dentista').value = '';
+    document.getElementById('f-duracion').value = '30';
+    document.getElementById('f-estado').value   = 'programada';
+    document.getElementById('f-costo').value    = '0';
+    ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-cita')).open();
+  }
+
+  async function editarCita(id) {
+    const data = await fetchAPI(`/citas/${id}`);
+    if (!data.success) { toast('❌ No se pudo cargar la cita', 'red'); return; }
+    const c = data.data;
+    citaEditandoId = id;
+    document.getElementById('modal-titulo-cita').textContent = 'Editar Cita';
+    document.getElementById('f-fecha').value       = new Date(c.fecha).toISOString().slice(0, 16);
+    document.getElementById('f-duracion').value    = c.duracionMinutos || 30;
+    document.getElementById('f-motivo').value      = c.motivo || '';
+    if (c.dentista) document.getElementById('f-dentista').value = c.dentista._id || c.dentista;
+    document.getElementById('f-tratamiento').value = c.tratamiento || '';
+    document.getElementById('f-estado').value      = c.estado || 'programada';
+    document.getElementById('f-costo').value       = c.costo || 0;
+    document.getElementById('f-notas').value       = c.notas || '';
+    if (c.paciente) document.getElementById('f-paciente').value = c.paciente._id;
+    ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-cita')).open();
+  }
+
+  async function guardarCita() {
+    const body = {
+      paciente:        document.getElementById('f-paciente').value,
+      fecha:           document.getElementById('f-fecha').value,
+      duracionMinutos: Number(document.getElementById('f-duracion').value),
+      motivo:          document.getElementById('f-motivo').value.trim(),
+      dentista:        document.getElementById('f-dentista').value.trim(),
+      tratamiento:     document.getElementById('f-tratamiento').value.trim(),
+      estado:          document.getElementById('f-estado').value,
+      costo:           Number(document.getElementById('f-costo').value),
+      notas:           document.getElementById('f-notas').value.trim(),
+    };
+    if (!body.paciente || !body.fecha || !body.motivo) {
+      mostrarError('Paciente, fecha y motivo son obligatorios.'); return;
+    }
+    const url    = citaEditandoId ? `/citas/${citaEditandoId}` : '/citas';
+    const method = citaEditandoId ? 'PUT' : 'POST';
+    const data   = await fetchAPI(url, { method, body: JSON.stringify(body) });
+    if (data.success) {
+      toast(`✅ Cita ${citaEditandoId ? 'actualizada' : 'creada'} correctamente`);
+      M.Modal.getInstance(document.getElementById('modal-cita')).close();
+      cargarCitas(); cargarStats();
+    } else {
+      mostrarError(data.mensaje || 'Error al guardar la cita.');
+    }
+  }
+
+  function pedirArchivar(id) {
+    citaArchivandoId = id;
+    M.Modal.getInstance(document.getElementById('modal-archivar')).open();
+  }
+
+  async function confirmarArchivar() {
+    const data = await fetchAPI(`/citas/${citaArchivandoId}`, { method: 'DELETE' });
+    M.Modal.getInstance(document.getElementById('modal-archivar')).close();
+    if (data.success) { toast('✅ Cita archivada'); cargarCitas(); cargarStats(); }
+    else toast('❌ ' + data.mensaje, 'red');
+  }
+
+  function mostrarError(msg) {
+    const box = document.getElementById('cita-error');
+    document.getElementById('cita-error-text').textContent = msg;
+    box.style.display = 'flex';
+  }
+  function ocultarError() { document.getElementById('cita-error').style.display = 'none'; }
+  function toast(msg, color = 'teal darken-1') {
+    M.toast({ html: msg, classes: `${color} rounded`, displayLength: 3000 });
+  }
+</script>
+</body>
+</html>

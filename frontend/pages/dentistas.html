@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OdontoSoft — Dentistas</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="../css/app.css" rel="stylesheet"/>
+</head>
+<body>
+
+<ul id="sidenav-main" class="sidenav sidenav-fixed">
+  <li>
+    <div class="user-view">
+      <div class="user-avatar"><i class="material-icons">account_circle</i></div>
+      <span class="user-name" id="nav-nombre">Cargando...</span>
+      <span class="user-role"  id="nav-rol"></span>
+    </div>
+  </li>
+  <li><div class="nav-label">Módulos</div></li>
+  <li><a href="pacientes.html"><i class="material-icons">people</i>Pacientes</a></li>
+  <li><a href="citas.html"><i class="material-icons">event_note</i>Citas</a></li>
+  <li class="active"><a href="dentistas.html"><i class="material-icons">medical_services</i>Dentistas</a></li>
+  <li><a href="historial.html"><i class="material-icons">folder_shared</i>Historial Clínico</a></li>
+  <li><div class="divider"></div></li>
+  <li><a href="#" onclick="cerrarSesion()"><i class="material-icons">logout</i>Cerrar sesión</a></li>
+</ul>
+
+<div class="navbar-fixed">
+  <nav class="top-nav">
+    <div class="nav-wrapper" style="padding:0 20px">
+      <a href="#" data-target="sidenav-main" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <span class="brand-logo center">
+        <i class="material-icons" style="vertical-align:middle;margin-right:6px;font-size:1.2rem">local_hospital</i>
+        OdontoSoft
+      </span>
+    </div>
+  </nav>
+</div>
+
+<div class="main-content">
+
+  <div class="page-title">
+    <i class="material-icons">medical_services</i>
+    Dentistas
+    <span class="count-badge" id="badge-total">0</span>
+  </div>
+
+  <div style="max-width:280px">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="material-icons">medical_services</i></div>
+      <div class="stat-info">
+        <span>Total activos</span>
+        <strong id="stat-total">—</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-card">
+    <div class="card-pad">
+      <div class="search-wrapper">
+        <i class="material-icons">search</i>
+        <input class="search-input" id="campo-busqueda" type="text"
+          placeholder="Buscar por nombre, apellido o cédula..."/>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-card">
+    <div class="card-pad" style="padding-bottom:8px">
+      <div class="card-header-bar">
+        <span>Lista de dentistas activos</span>
+        <button class="btn-save" onclick="abrirModalNuevo()" style="font-size:0.82rem;padding:8px 16px">
+          <i class="material-icons" style="font-size:16px">person_add</i>
+          Nuevo dentista
+        </button>
+      </div>
+    </div>
+    <div class="card-pad" style="padding-top:0">
+      <div id="contenedor-tabla">
+        <div class="loading-state">
+          <div class="preloader-wrapper active">
+            <div class="spinner-layer spinner-teal-only">
+              <div class="circle-clipper left"><div class="circle"></div></div>
+              <div class="gap-patch"><div class="circle"></div></div>
+              <div class="circle-clipper right"><div class="circle"></div></div>
+            </div>
+          </div>
+          <p>Cargando dentistas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="fab-fixed">
+  <button class="fab-btn" onclick="abrirModalNuevo()" title="Nuevo dentista">
+    <i class="material-icons">person_add</i>
+  </button>
+</div>
+
+<!-- Modal nuevo/editar -->
+<div id="modal-form" class="modal modal-fixed-footer">
+  <div class="modal-content">
+    <div class="modal-title">
+      <i class="material-icons">medical_services</i>
+      <span id="modal-titulo">Nuevo Dentista</span>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Nombre <span style="color:#e53935">*</span></label>
+        <input id="f-nombre" type="text" placeholder="Ej: Erika"/>
+      </div>
+      <div class="form-field">
+        <label>Apellido <span style="color:#e53935">*</span></label>
+        <input id="f-apellido" type="text" placeholder="Ej: Martínez"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Cédula profesional <span style="color:#e53935">*</span></label>
+        <input id="f-cedula" type="text" placeholder="Ej: 123456"/>
+      </div>
+      <div class="form-field">
+        <label>Especialidad</label>
+        <input id="f-especialidad" type="text" placeholder="Ej: Ortodoncia"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Teléfono</label>
+        <input id="f-telefono" type="text" placeholder="Ej: 3001234567"/>
+      </div>
+      <div class="form-field">
+        <label>Email</label>
+        <input id="f-email" type="email" placeholder="correo@ejemplo.com"/>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Horario de atención</label>
+      <input id="f-horario" type="text" placeholder="Ej: Lun-Vie 8am-5pm"/>
+    </div>
+
+    <div class="modal-error" id="modal-error">
+      <i class="material-icons">error_outline</i>
+      <span id="modal-error-text"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">Cancelar</button>
+    <button class="btn-save" onclick="guardarDentista()">
+      <i class="material-icons" style="font-size:18px">save</i> Guardar
+    </button>
+  </div>
+</div>
+
+<!-- Modal desactivar -->
+<div id="modal-eliminar" class="modal" style="max-width:420px !important">
+  <div class="modal-content">
+    <div class="modal-title danger">
+      <i class="material-icons">warning_amber</i>
+      Confirmar desactivación
+    </div>
+    <p id="texto-eliminar" style="color:#546e7a;font-size:0.92rem;line-height:1.7"></p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">No, cancelar</button>
+    <button class="btn-danger" onclick="confirmarEliminar()">
+      <i class="material-icons" style="font-size:18px">person_off</i> Sí, desactivar
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="../js/config.js"></script>
+<script>
+  let dentistaEditandoId   = null;
+  let dentistaEliminandoId = null;
+  let debounceTimer;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!verificarAuth()) return;
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    M.Modal.init(document.querySelectorAll('.modal'), { dismissible: true });
+    const u = getUsuario();
+    document.getElementById('nav-nombre').textContent = u.nombre || 'Usuario';
+    document.getElementById('nav-rol').textContent    = u.rol ? u.rol.charAt(0).toUpperCase() + u.rol.slice(1) : '';
+    document.getElementById('campo-busqueda').addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => cargarDentistas(this.value.trim()), 350);
+    });
+    cargarDentistas();
+  });
+
+  async function cargarDentistas(busqueda = '') {
+    mostrarLoading();
+    const qs   = busqueda ? `?search=${encodeURIComponent(busqueda)}` : '';
+    const data = await fetchAPI(`/dentistas${qs}`);
+    const total = data.total || 0;
+    document.getElementById('stat-total').textContent  = total;
+    document.getElementById('badge-total').textContent = total;
+    renderizarTabla(data.data || []);
+  }
+
+  function mostrarLoading() {
+    document.getElementById('contenedor-tabla').innerHTML = `
+      <div class="loading-state">
+        <div class="preloader-wrapper active">
+          <div class="spinner-layer spinner-teal-only">
+            <div class="circle-clipper left"><div class="circle"></div></div>
+            <div class="gap-patch"><div class="circle"></div></div>
+            <div class="circle-clipper right"><div class="circle"></div></div>
+          </div>
+        </div><p>Cargando dentistas...</p>
+      </div>`;
+  }
+
+  function renderizarTabla(dentistas) {
+    const c = document.getElementById('contenedor-tabla');
+    if (!dentistas.length) {
+      c.innerHTML = `
+        <div class="empty-state">
+          <i class="material-icons">medical_services</i>
+          <p>No se encontraron dentistas.<br>
+          <span style="font-size:0.85rem;color:#cfd8dc">Usa el botón <b>Nuevo dentista</b> para agregar uno.</span></p>
+        </div>`;
+      return;
+    }
+    c.innerHTML = `
+      <div class="table-responsive">
+        <table class="os-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Nombre</th><th>Cédula</th><th>Especialidad</th>
+              <th>Teléfono</th><th>Horario</th><th style="text-align:center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dentistas.map((d, i) => `
+              <tr>
+                <td class="text-muted" style="font-size:0.8rem">${i + 1}</td>
+                <td>
+                  <b>Dr(a). ${d.nombre} ${d.apellido}</b>
+                  ${d.email ? `<br><a href="mailto:${d.email}" style="color:#00897b;font-size:0.78rem">${d.email}</a>` : ''}
+                </td>
+                <td><code class="cedula">${d.cedula}</code></td>
+                <td>${d.especialidad || '<span class="text-muted">—</span>'}</td>
+                <td>${d.telefono    || '<span class="text-muted">—</span>'}</td>
+                <td>${d.horario     || '<span class="text-muted">—</span>'}</td>
+                <td style="text-align:center;white-space:nowrap">
+                  <button class="btn-icon btn-edit" onclick="editarDentista('${d._id}')" title="Editar">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button class="btn-icon btn-delete" onclick="pedirEliminar('${d._id}','${d.nombre} ${d.apellido}')" title="Desactivar">
+                    <i class="material-icons">person_off</i>
+                  </button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-footer">${dentistas.length} dentista(s)</p>`;
+  }
+
+  function abrirModalNuevo() {
+    dentistaEditandoId = null;
+    document.getElementById('modal-titulo').textContent = 'Nuevo Dentista';
+    limpiarFormulario(); ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-form')).open();
+    setTimeout(() => document.getElementById('f-nombre').focus(), 300);
+  }
+
+  async function editarDentista(id) {
+    const data = await fetchAPI(`/dentistas/${id}`);
+    if (!data.success) { toast('❌ No se pudo cargar el dentista', 'red darken-2'); return; }
+    const d = data.data;
+    dentistaEditandoId = id;
+    document.getElementById('modal-titulo').textContent    = 'Editar Dentista';
+    document.getElementById('f-nombre').value             = d.nombre      || '';
+    document.getElementById('f-apellido').value           = d.apellido    || '';
+    document.getElementById('f-cedula').value             = d.cedula      || '';
+    document.getElementById('f-especialidad').value       = d.especialidad|| '';
+    document.getElementById('f-telefono').value           = d.telefono    || '';
+    document.getElementById('f-email').value              = d.email       || '';
+    document.getElementById('f-horario').value            = d.horario     || '';
+    ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-form')).open();
+  }
+
+  async function guardarDentista() {
+    const body = {
+      nombre:      document.getElementById('f-nombre').value.trim(),
+      apellido:    document.getElementById('f-apellido').value.trim(),
+      cedula:      document.getElementById('f-cedula').value.trim(),
+      especialidad:document.getElementById('f-especialidad').value.trim(),
+      telefono:    document.getElementById('f-telefono').value.trim(),
+      email:       document.getElementById('f-email').value.trim(),
+      horario:     document.getElementById('f-horario').value.trim(),
+    };
+    if (!body.nombre)   { mostrarError('El nombre es obligatorio.');            return; }
+    if (!body.apellido) { mostrarError('El apellido es obligatorio.');          return; }
+    if (!body.cedula)   { mostrarError('La cédula profesional es obligatoria.'); return; }
+
+    const url    = dentistaEditandoId ? `/dentistas/${dentistaEditandoId}` : '/dentistas';
+    const method = dentistaEditandoId ? 'PUT' : 'POST';
+    const data   = await fetchAPI(url, { method, body: JSON.stringify(body) });
+
+    if (data.success) {
+      toast(`✅ Dentista ${dentistaEditandoId ? 'actualizado' : 'registrado'} correctamente`);
+      M.Modal.getInstance(document.getElementById('modal-form')).close();
+      cargarDentistas(document.getElementById('campo-busqueda').value.trim());
+    } else {
+      mostrarError(data.mensaje || 'Error al guardar.');
+    }
+  }
+
+  function pedirEliminar(id, nombre) {
+    dentistaEliminandoId = id;
+    document.getElementById('texto-eliminar').innerHTML = `
+      ¿Deseas desactivar a <b>Dr(a). ${nombre}</b>?<br>
+      <span style="color:#90a4ae;font-size:0.82rem">No podrá ser seleccionado en nuevas citas.</span>`;
+    M.Modal.getInstance(document.getElementById('modal-eliminar')).open();
+  }
+
+  async function confirmarEliminar() {
+    const data = await fetchAPI(`/dentistas/${dentistaEliminandoId}`, { method: 'DELETE' });
+    M.Modal.getInstance(document.getElementById('modal-eliminar')).close();
+    if (data.success) {
+      toast('✅ Dentista desactivado correctamente');
+      cargarDentistas(document.getElementById('campo-busqueda').value.trim());
+    } else {
+      toast('❌ ' + (data.mensaje || 'Error al desactivar'), 'red darken-2');
+    }
+  }
+
+  function limpiarFormulario() {
+    ['nombre','apellido','cedula','especialidad','telefono','email','horario']
+      .forEach(id => document.getElementById(`f-${id}`).value = '');
+  }
+  function mostrarError(msg) {
+    const box = document.getElementById('modal-error');
+    document.getElementById('modal-error-text').textContent = msg;
+    box.style.display = 'flex';
+  }
+  function ocultarError() { document.getElementById('modal-error').style.display = 'none'; }
+  function toast(msg, color = 'teal darken-1') {
+    M.toast({ html: msg, classes: `${color} rounded`, displayLength: 3000 });
+  }
+</script>
+</body>
+</html>

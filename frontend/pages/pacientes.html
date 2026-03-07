@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OdontoSoft — Pacientes</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="../css/app.css" rel="stylesheet"/>
+</head>
+<body>
+
+<ul id="sidenav-main" class="sidenav sidenav-fixed">
+  <li>
+    <div class="user-view">
+      <div class="user-avatar"><i class="material-icons">account_circle</i></div>
+      <span class="user-name" id="nav-nombre">Cargando...</span>
+      <span class="user-role"  id="nav-rol"></span>
+    </div>
+  </li>
+  <li><div class="nav-label">Módulos</div></li>
+  <li class="active"><a href="pacientes.html"><i class="material-icons">people</i>Pacientes</a></li>
+  <li><a href="citas.html"><i class="material-icons">event_note</i>Citas</a></li>
+  <li><a href="historial.html"><i class="material-icons">folder_shared</i>Historial Clínico</a></li>
+  <li><div class="divider"></div></li>
+  <li><a href="#" onclick="cerrarSesion()"><i class="material-icons">logout</i>Cerrar sesión</a></li>
+</ul>
+
+<div class="navbar-fixed">
+  <nav class="top-nav">
+    <div class="nav-wrapper" style="padding:0 20px">
+      <a href="#" data-target="sidenav-main" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <span class="brand-logo center">
+        <i class="material-icons" style="vertical-align:middle;margin-right:6px;font-size:1.2rem">local_hospital</i>
+        OdontoSoft
+      </span>
+    </div>
+  </nav>
+</div>
+
+<div class="main-content">
+
+  <div class="page-title">
+    <i class="material-icons">people</i>
+    Pacientes
+    <span class="count-badge" id="badge-total">0</span>
+  </div>
+
+  <div style="max-width:280px">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="material-icons">people</i></div>
+      <div class="stat-info">
+        <span>Total activos</span>
+        <strong id="stat-total">—</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-card">
+    <div class="card-pad">
+      <div class="search-wrapper">
+        <i class="material-icons">search</i>
+        <input class="search-input" id="campo-busqueda" type="text"
+          placeholder="Buscar por nombre, apellido o cédula..."/>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-card">
+    <div class="card-pad" style="padding-bottom:8px">
+      <div class="card-header-bar">
+        <span>Lista de pacientes activos</span>
+        <button class="btn-save" onclick="abrirModalNuevo()" style="font-size:0.82rem;padding:8px 16px">
+          <i class="material-icons" style="font-size:16px">person_add</i>
+          Nuevo paciente
+        </button>
+      </div>
+    </div>
+    <div class="card-pad" style="padding-top:0">
+      <div id="contenedor-tabla">
+        <div class="loading-state">
+          <div class="preloader-wrapper active">
+            <div class="spinner-layer spinner-teal-only">
+              <div class="circle-clipper left"><div class="circle"></div></div>
+              <div class="gap-patch"><div class="circle"></div></div>
+              <div class="circle-clipper right"><div class="circle"></div></div>
+            </div>
+          </div>
+          <p>Cargando pacientes...</p>
+        </div>
+      </div>
+      <!-- Paginación -->
+      <div id="paginacion" style="display:flex;justify-content:center;align-items:center;gap:10px;padding:12px 0;display:none">
+        <button class="btn-cancel" id="btn-prev" onclick="cambiarPagina(-1)" style="padding:6px 14px">
+          <i class="material-icons" style="vertical-align:middle;font-size:18px">chevron_left</i>
+        </button>
+        <span id="pag-info" style="font-size:0.85rem;color:#546e7a;font-weight:700"></span>
+        <button class="btn-cancel" id="btn-next" onclick="cambiarPagina(1)" style="padding:6px 14px">
+          <i class="material-icons" style="vertical-align:middle;font-size:18px">chevron_right</i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="fab-fixed">
+  <button class="fab-btn" onclick="abrirModalNuevo()" title="Nuevo paciente">
+    <i class="material-icons">person_add</i>
+  </button>
+</div>
+
+<!-- Modal nuevo/editar -->
+<div id="modal-form" class="modal modal-fixed-footer">
+  <div class="modal-content">
+    <div class="modal-title">
+      <i class="material-icons">person</i>
+      <span id="modal-titulo">Nuevo Paciente</span>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Nombre <span style="color:#e53935">*</span></label>
+        <input id="f-nombre" type="text" placeholder="Ej: Carlos"/>
+      </div>
+      <div class="form-field">
+        <label>Apellido <span style="color:#e53935">*</span></label>
+        <input id="f-apellido" type="text" placeholder="Ej: Ramírez"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Cédula <span style="color:#e53935">*</span></label>
+        <input id="f-cedula" type="text" placeholder="Ej: 1234567890"/>
+      </div>
+      <div class="form-field">
+        <label>Teléfono <span style="color:#e53935">*</span></label>
+        <input id="f-telefono" type="text" placeholder="Ej: 3001234567"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Email</label>
+        <input id="f-email" type="email" placeholder="correo@ejemplo.com"/>
+      </div>
+      <div class="form-field">
+        <label>Fecha de nacimiento <span style="color:#e53935">*</span></label>
+        <input id="f-fechaNacimiento" type="date"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Dirección</label>
+      <textarea id="f-direccion" placeholder="Dirección completa..."></textarea>
+    </div>
+    <div class="modal-error" id="modal-error">
+      <i class="material-icons">error_outline</i>
+      <span id="modal-error-text"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">Cancelar</button>
+    <button class="btn-save" onclick="guardarPaciente()">
+      <i class="material-icons" style="font-size:18px">save</i> Guardar
+    </button>
+  </div>
+</div>
+
+<!-- Modal eliminar -->
+<div id="modal-eliminar" class="modal" style="max-width:420px !important">
+  <div class="modal-content">
+    <div class="modal-title danger">
+      <i class="material-icons">warning_amber</i>
+      Confirmar desactivación
+    </div>
+    <p id="texto-eliminar" style="color:#546e7a;font-size:0.92rem;line-height:1.7"></p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel modal-close">No, cancelar</button>
+    <button class="btn-danger" onclick="confirmarEliminar()">
+      <i class="material-icons" style="font-size:18px">person_off</i> Sí, desactivar
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="../js/config.js"></script>
+<script>
+  let pacienteEditandoId   = null;
+  let pacienteEliminandoId = null;
+  let debounceTimer;
+  let paginaActual  = 1;
+  let totalPaginas  = 1;
+  const LIMIT       = 15;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!verificarAuth()) return;
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    M.Modal.init(document.querySelectorAll('.modal'), { dismissible: true });
+    const u = getUsuario();
+    document.getElementById('nav-nombre').textContent = u.nombre || 'Usuario';
+    document.getElementById('nav-rol').textContent    =
+      u.rol ? u.rol.charAt(0).toUpperCase() + u.rol.slice(1) : '';
+    document.getElementById('campo-busqueda').addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      paginaActual = 1;
+      debounceTimer = setTimeout(() => cargarPacientes(this.value.trim()), 350);
+    });
+    cargarPacientes();
+  });
+
+  async function cargarPacientes(busqueda = '') {
+    mostrarLoading();
+    const params = new URLSearchParams({ page: paginaActual, limit: LIMIT });
+    if (busqueda) params.append('search', busqueda);
+    const data = await fetchAPI(`/pacientes?${params}`);
+    const total = data.total || 0;
+    totalPaginas = data.totalPaginas || 1;
+    document.getElementById('stat-total').textContent  = total;
+    document.getElementById('badge-total').textContent = total;
+    renderizarTabla(data.data || []);
+    actualizarPaginacion();
+  }
+
+  function actualizarPaginacion() {
+    const div = document.getElementById('paginacion');
+    if (totalPaginas <= 1) { div.style.display = 'none'; return; }
+    div.style.display = 'flex';
+    document.getElementById('pag-info').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+    document.getElementById('btn-prev').disabled = paginaActual <= 1;
+    document.getElementById('btn-next').disabled = paginaActual >= totalPaginas;
+  }
+
+  function cambiarPagina(delta) {
+    paginaActual = Math.max(1, Math.min(totalPaginas, paginaActual + delta));
+    cargarPacientes(document.getElementById('campo-busqueda').value.trim());
+  }
+
+  function mostrarLoading() {
+    document.getElementById('contenedor-tabla').innerHTML = `
+      <div class="loading-state">
+        <div class="preloader-wrapper active">
+          <div class="spinner-layer spinner-teal-only">
+            <div class="circle-clipper left"><div class="circle"></div></div>
+            <div class="gap-patch"><div class="circle"></div></div>
+            <div class="circle-clipper right"><div class="circle"></div></div>
+          </div>
+        </div><p>Cargando pacientes...</p>
+      </div>`;
+  }
+
+  function renderizarTabla(pacientes) {
+    const c = document.getElementById('contenedor-tabla');
+    if (!pacientes.length) {
+      c.innerHTML = `
+        <div class="empty-state">
+          <i class="material-icons">people_outline</i>
+          <p>No se encontraron pacientes.<br>
+          <span style="font-size:0.85rem;color:#cfd8dc">
+            Usa el botón <b>Nuevo paciente</b> para agregar uno.
+          </span></p>
+        </div>`;
+      return;
+    }
+    c.innerHTML = `
+      <div class="table-responsive">
+        <table class="os-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Nombre completo</th><th>Cédula</th>
+              <th>Teléfono</th><th>Email</th>
+              <th style="text-align:center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pacientes.map((p, i) => `
+              <tr>
+                <td class="text-muted" style="font-size:0.8rem">${(paginaActual - 1) * LIMIT + i + 1}</td>
+                <td><b>${p.nombre} ${p.apellido}</b></td>
+                <td><code class="cedula">${p.cedula}</code></td>
+                <td>${p.telefono}</td>
+                <td>${p.email
+                  ? `<a href="mailto:${p.email}" style="color:#00897b">${p.email}</a>`
+                  : '<span class="text-muted">—</span>'}</td>
+                <td style="text-align:center;white-space:nowrap">
+                  <a href="historial.html?paciente=${p._id}&nombre=${encodeURIComponent(p.nombre+' '+p.apellido)}">
+                    <button class="btn-icon btn-view" title="Historial clínico">
+                      <i class="material-icons">folder_shared</i>
+                    </button>
+                  </a>
+                  <button class="btn-icon btn-edit"
+                    onclick="editarPaciente('${p._id}')" title="Editar">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button class="btn-icon btn-delete"
+                    onclick="pedirEliminar('${p._id}','${p.nombre} ${p.apellido}')" title="Desactivar">
+                    <i class="material-icons">person_off</i>
+                  </button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-footer">Mostrando ${pacientes.length} de ${document.getElementById('stat-total').textContent} paciente(s)</p>`;
+  }
+
+  function abrirModalNuevo() {
+    pacienteEditandoId = null;
+    document.getElementById('modal-titulo').textContent = 'Nuevo Paciente';
+    limpiarFormulario(); ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-form')).open();
+    setTimeout(() => document.getElementById('f-nombre').focus(), 300);
+  }
+
+  async function editarPaciente(id) {
+    const data = await fetchAPI(`/pacientes/${id}`);
+    if (!data.success) { toast('❌ No se pudo cargar el paciente', 'red darken-2'); return; }
+    const p = data.data;
+    pacienteEditandoId = id;
+    document.getElementById('modal-titulo').textContent    = 'Editar Paciente';
+    document.getElementById('f-nombre').value             = p.nombre || '';
+    document.getElementById('f-apellido').value           = p.apellido || '';
+    document.getElementById('f-cedula').value             = p.cedula || '';
+    document.getElementById('f-telefono').value           = p.telefono || '';
+    document.getElementById('f-email').value              = p.email || '';
+    document.getElementById('f-fechaNacimiento').value    = p.fechaNacimiento ? p.fechaNacimiento.substring(0,10) : '';
+    document.getElementById('f-direccion').value          = p.direccion || '';
+    ocultarError();
+    M.Modal.getInstance(document.getElementById('modal-form')).open();
+  }
+
+  async function guardarPaciente() {
+    const body = {
+      nombre:          document.getElementById('f-nombre').value.trim(),
+      apellido:        document.getElementById('f-apellido').value.trim(),
+      cedula:          document.getElementById('f-cedula').value.trim(),
+      telefono:        document.getElementById('f-telefono').value.trim(),
+      email:           document.getElementById('f-email').value.trim(),
+      fechaNacimiento: document.getElementById('f-fechaNacimiento').value,
+      direccion:       document.getElementById('f-direccion').value.trim(),
+    };
+    if (!body.nombre)          { mostrarError('El nombre es obligatorio.');              return; }
+    if (!body.apellido)        { mostrarError('El apellido es obligatorio.');            return; }
+    if (!body.cedula)          { mostrarError('La cédula es obligatoria.');              return; }
+    if (!body.telefono)        { mostrarError('El teléfono es obligatorio.');            return; }
+    if (!body.fechaNacimiento) { mostrarError('La fecha de nacimiento es obligatoria.'); return; }
+
+    const url    = pacienteEditandoId ? `/pacientes/${pacienteEditandoId}` : '/pacientes';
+    const method = pacienteEditandoId ? 'PUT' : 'POST';
+    const data   = await fetchAPI(url, { method, body: JSON.stringify(body) });
+
+    if (data.success) {
+      toast(`✅ Paciente ${pacienteEditandoId ? 'actualizado' : 'registrado'} correctamente`);
+      M.Modal.getInstance(document.getElementById('modal-form')).close();
+      cargarPacientes(document.getElementById('campo-busqueda').value.trim());
+    } else {
+      mostrarError(data.mensaje || 'Error al guardar el paciente.');
+    }
+  }
+
+  function pedirEliminar(id, nombre) {
+    pacienteEliminandoId = id;
+    document.getElementById('texto-eliminar').innerHTML = `
+      ¿Deseas desactivar al paciente <b>${nombre}</b>?<br>
+      <span style="color:#90a4ae;font-size:0.82rem">El registro y su historial se conservan en la base de datos.</span>`;
+    M.Modal.getInstance(document.getElementById('modal-eliminar')).open();
+  }
+
+  async function confirmarEliminar() {
+    const data = await fetchAPI(`/pacientes/${pacienteEliminandoId}`, { method: 'DELETE' });
+    M.Modal.getInstance(document.getElementById('modal-eliminar')).close();
+    if (data.success) {
+      toast('✅ Paciente desactivado correctamente');
+      cargarPacientes(document.getElementById('campo-busqueda').value.trim());
+    } else {
+      toast('❌ ' + (data.mensaje || 'Error al desactivar'), 'red darken-2');
+    }
+  }
+
+  function limpiarFormulario() {
+    ['nombre','apellido','cedula','telefono','email','fechaNacimiento','direccion']
+      .forEach(id => { document.getElementById(`f-${id}`).value = ''; });
+  }
+  function mostrarError(msg) {
+    const box = document.getElementById('modal-error');
+    document.getElementById('modal-error-text').textContent = msg;
+    box.style.display = 'flex';
+  }
+  function ocultarError() { document.getElementById('modal-error').style.display = 'none'; }
+  function toast(msg, color = 'teal darken-1') {
+    M.toast({ html: msg, classes: `${color} rounded`, displayLength: 3000 });
+  }
+</script>
+</body>
+</html>
