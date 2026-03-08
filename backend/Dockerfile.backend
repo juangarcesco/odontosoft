@@ -1,0 +1,20 @@
+# ── Etapa de producción ───────────────────────────────────
+FROM node:20-alpine
+
+# Directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiar dependencias primero (caching de capas)
+COPY package*.json ./
+
+# Instalar solo dependencias de producción
+RUN npm install --omit=dev
+
+# Copiar el código fuente
+COPY . .
+
+# Puerto que expone el backend
+EXPOSE 3000
+
+# Comando de inicio
+CMD ["node", "server.js"]
