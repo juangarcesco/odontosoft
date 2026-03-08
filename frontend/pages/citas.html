@@ -232,6 +232,7 @@
   let citaEditandoId  = null;
   let citaArchivandoId = null;
   let todosLosPacientes = [];
+  let todasLasCitas = [];
   let filtroDebounce;
 
   const ESTADO_CLASE = { programada:'chip-programada', completada:'chip-completada', cancelada:'chip-cancelada', no_asistio:'chip-no_asistio' };
@@ -295,28 +296,34 @@
   function filtrarPacientesSelect(texto) {
     clearTimeout(filtroDebounce);
     filtroDebounce = setTimeout(() => {
-      if (!texto) { poblarSelect(todosLosPacientes); cargarCitas(); return; }
-      const t = texto.toLowerCase();
-      const filtrados = todosLosPacientes.filter(p =>
-        `${p.nombre} ${p.apellido}`.toLowerCase().includes(t) ||
-        p.cedula.includes(t)
-      );
-      poblarSelect(filtrados);
-      // Filtrar tabla de citas también
-      const pid = filtrados.length === 1 ? filtrados[0]._id : '';
-      cargarCitas(pid);
-    }, 350);
+      aplicarFiltros();
+    }, 300);
   }
 
-  async function cargarCitas(pacienteId = '') {
+  async function cargarCitas() {
     const fecha  = document.getElementById('filtro-fecha').value;
     const estado = document.getElementById('filtro-estado').value;
     const params = [];
-    if (fecha)      params.push(`fecha=${fecha}`);
-    if (estado)     params.push(`estado=${estado}`);
-    if (pacienteId) params.push(`paciente=${pacienteId}`);
+    if (fecha)  params.push(`fecha=${fecha}`);
+    if (estado) params.push(`estado=${estado}`);
     const data = await fetchAPI(`/citas${params.length ? '?' + params.join('&') : ''}`);
-    renderizarCitas(data.data || []);
+    todasLasCitas = data.data || [];
+    aplicarFiltros();
+  }
+
+  function aplicarFiltros() {
+    const texto = document.getElementById('filtro-paciente-texto').value.toLowerCase().trim();
+    if (!texto) {
+      renderizarCitas(todasLasCitas);
+      return;
+    }
+    const filtradas = todasLasCitas.filter(cita => {
+      if (!cita.paciente) return false;
+      const nombre = `${cita.paciente.nombre} ${cita.paciente.apellido}`.toLowerCase();
+      const cedula = (cita.paciente.cedula || '').toLowerCase();
+      return nombre.includes(texto) || cedula.includes(texto);
+    });
+    renderizarCitas(filtradas);
   }
 
   function limpiarFiltros() {

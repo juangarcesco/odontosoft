@@ -78,7 +78,8 @@ exports.crearCita = async (req, res) => {
     }
 
     const cita = await Cita.create(req.body);
-    await cita.populate('paciente', 'nombre apellido').populate('dentista', 'nombre apellido'); await cita.populate('dentista', 'nombre apellido');
+    await cita.populate('paciente', 'nombre apellido');
+    await cita.populate('dentista', 'nombre apellido');
     res.status(201).json({ success: true, data: cita });
   } catch (error) {
     res.status(400).json({ success: false, mensaje: error.message });

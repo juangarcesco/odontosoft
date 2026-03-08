@@ -157,7 +157,10 @@
       </div>
       <div class="form-field">
         <label>Dentista</label>
-        <input id="e-dentista" type="text" placeholder="Ej: Dr. García"/>
+        <select id="e-dentista"
+          style="display:block;width:100%;height:48px;border:2px solid #e0e0e0;border-radius:10px;padding:0 14px;font-family:'Nunito',sans-serif;font-size:0.92rem;color:#263238;background:#fff;outline:none;">
+          <option value="">— Sin asignar —</option>
+        </select>
       </div>
     </div>
 
@@ -226,6 +229,7 @@
     document.getElementById('nav-rol').textContent    = u.rol ? u.rol.charAt(0).toUpperCase() + u.rol.slice(1) : '';
 
     await cargarPacientes();
+    await cargarSelectDentistas();
 
     // Si viene con ?paciente=ID por link directo desde la tabla
     const params = new URLSearchParams(window.location.search);
@@ -235,6 +239,17 @@
       cargarHistorial(pid);
     }
   });
+
+  async function cargarSelectDentistas() {
+    const data   = await fetchAPI('/dentistas');
+    const select = document.getElementById('e-dentista');
+    (data.data || []).forEach(d => {
+      const opt = document.createElement('option');
+      opt.value       = `Dr(a). ${d.nombre} ${d.apellido}`;
+      opt.textContent = `Dr(a). ${d.nombre} ${d.apellido}${d.especialidad ? ' — ' + d.especialidad : ''}`;
+      select.appendChild(opt);
+    });
+  }
 
   async function cargarPacientes() {
     const data   = await fetchAPI('/pacientes?limit=500');
@@ -360,8 +375,9 @@
     if (!pacienteActualId) { toast('⚠️ Primero selecciona un paciente', 'orange darken-2'); return; }
     entradaEditandoId = null;
     document.getElementById('modal-titulo-entrada').textContent = 'Nueva Entrada Clínica';
-    ['e-fecha','e-dentista','e-motivo','e-diagnostico','e-tratamiento','e-piezas','e-medicamentos','e-proxima','e-observaciones']
+    ['e-fecha','e-motivo','e-diagnostico','e-tratamiento','e-piezas','e-medicamentos','e-proxima','e-observaciones']
       .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('e-dentista').value = '';
     document.getElementById('e-fecha').value = new Date().toISOString().substring(0,10);
     ocultarError();
     M.Modal.getInstance(document.getElementById('modal-entrada')).open();
